@@ -91,6 +91,9 @@ its `product_id`, its `product_type` (else the table) as label, `calculated_pric
 `calculated_price_ex_gst`) in `AUD`; `days` is `null`. `Shipment::$service` does not filter them.
 Rates come cheapest first; `toPickupPoint` is `false`.
 
+> [!WARNING]
+> Known defect: only the first parcel is priced, where a shipment of several parcels should be priced whole.
+
 **Ship.** `POST /shipments` with one shipment: the reference (50 characters), tracking emails when
 the recipient has an email, both parties, one item per parcel with the product
 (`Shipment::$service`, else `PP` in Australia and `PTI8` elsewhere), the parcel's `reference`
@@ -105,6 +108,9 @@ succeeds without a label (a comment in `ShippingAction` says `GetSlip` asks agai
 not supported). The format is `application/pdf`; `trackingUrl` is
 `https://auspost.com.au/mypost/track/#/details/<number>`. A response without a shipment id or a
 number is a `CarrierException` (`Australia Post booked no shipment.`).
+
+> [!WARNING]
+> Known defect: the label group is `Parcel Post` in Australia whatever the product (Express Post included), where it should follow the product.
 
 **Track.** `GET /track` for the number; the locale is not sent. The events of the first trackable
 item (else of the result): their date, description and location; no event code is kept. Events
