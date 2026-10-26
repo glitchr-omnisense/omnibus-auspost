@@ -1,6 +1,6 @@
 # omnibus/auspost
 
-Australia Post for [omniscient/omnibus](https://github.com/glitchr-studio/omnibus): prices,
+Australia Post for [omnisense/omnibus](https://github.com/glitchr-omnisense/omnibus): prices,
 shipments with their PDF labels, tracking and cancellations, through Australia Post's Shipping and
 Tracking API (HTTP basic authentication with the API key and password, the charge account in a
 header). The gateway calls:
@@ -21,7 +21,7 @@ environment, `sandbox: true`). Every call sends `Account-Number` and has a 20-se
 composer require omnibus/auspost
 ```
 
-Requires PHP 8.2, `omniscient/omnibus` (2.x) and `symfony/http-client` (6.4, 7 or 8); given no
+Requires PHP 8.2, `omnisense/omnibus` (2.x) and `symfony/http-client` (6.4, 7 or 8); given no
 HTTP client, the factory makes one with `HttpClient::create()`. In a Symfony application with
 `Omnibus\Bridge\Symfony\OmnibusBundle`, the factory is registered as soon as the package is
 installed.
@@ -40,7 +40,7 @@ installed.
 | `password` | string | - | yes | its password |
 | `account_number` | string | - | yes | the charge account, sent as `Account-Number` |
 | `sandbox` | bool | `false` | no | `true`: the test environment |
-| `rates` | list | - | no | prices from configuration instead of `/prices/items` ([the rates option](https://github.com/glitchr-studio/omnibus/blob/2.x/docs/configuration.md#the-rates-option)): with it, `/prices/items` is not called |
+| `rates` | list | - | no | prices from configuration instead of `/prices/items` ([the rates option](https://github.com/glitchr-omnisense/omnibus/blob/2.x/docs/configuration.md#the-rates-option)): with it, `/prices/items` is not called |
 
 Shipment options (`Shipment::$options`):
 

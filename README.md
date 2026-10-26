@@ -1,6 +1,6 @@
 # omnibus/auspost
 
-Australia Post for [omniscient/omnibus](https://github.com/glitchr-studio/omnibus): prices,
+Australia Post for [omnisense/omnibus](https://github.com/glitchr-omnisense/omnibus): prices,
 shipments with their labels, tracking and cancellations - the Shipping and Tracking API
 (basic auth with the API key, the charge account in a header).
 
@@ -8,7 +8,7 @@ shipments with their labels, tracking and cancellations - the Shipping and Track
 $gateway = (new AuspostGatewayFactory($http))->create($options);   // $http: the application's HTTP client - none given, the factory makes its own; the options below
 ```
 
-No framework needed: the package requires `omniscient/omnibus` and `symfony/http-client`. In a
+No framework needed: the package requires `omnisense/omnibus` and `symfony/http-client`. In a
 Symfony application, the same through the bundle's configuration:
 
 ```yaml
