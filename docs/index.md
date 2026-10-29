@@ -85,14 +85,12 @@ two decimals (at least 0.1).
 | `ECM8` | International Express |
 | `AIR8` | International Economy Air |
 
-**Rate.** `POST /prices/items` with both parties and the items. The rates are the prices of the
-first item of the answer: a shipment of several parcels is priced as its first parcel. Each price:
-its `product_id`, its `product_type` (else the table) as label, `calculated_price` (else
-`calculated_price_ex_gst`) in `AUD`; `days` is `null`. `Shipment::$service` does not filter them.
-Rates come cheapest first; `toPickupPoint` is `false`.
-
-> [!WARNING]
-> Known defect: only the first parcel is priced, where a shipment of several parcels should be priced whole.
+**Rate.** `POST /prices/items` with both parties and the items, one per parcel. Australia Post
+prices each item on its own: a product's rate is the sum of its prices over the parcels, and a
+product that does not carry every parcel is left out. Each price: its `product_id`, its
+`product_type` (else the table) as label, `calculated_price` (else `calculated_price_ex_gst`) in
+`AUD`; `days` is `null`. `Shipment::$service` does not filter them. Rates come cheapest first;
+`toPickupPoint` is `false`.
 
 **Ship.** `POST /shipments` with one shipment: the reference (50 characters), tracking emails when
 the recipient has an email, both parties, one item per parcel with the product
@@ -208,7 +206,8 @@ A failed label request after the shipment is created is not raised (above). A mi
 ## Verified, and not
 
 Tested offline: `Tests/AuspostGatewayTest.php` (prices cheapest first in `AUD`, the
-`Account-Number` header, the recipient's state, the weight in kilograms; a shipment created with
+`Account-Number` header, the recipient's state, the weight in kilograms; two parcels priced as
+the sum of their prices, a product that carries only one of them left out; a shipment created with
 product `PP` and tracking emails, its label requested by shipment id and fetched; tracking with its
 location; the cancellation through the shipment id) and `Tests/AuspostContractTest.php`, the
 family's conformance suite on recorded answers. The example above was run in the core's harness on
