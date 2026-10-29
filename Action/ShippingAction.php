@@ -53,18 +53,15 @@ final class ShippingAction implements ActionInterface, ApiAwareInterface
         $url = null;
         $content = null;
         try {
-            $labels = $this->api->call('POST', '/shipping/v1/labels', [
-                'wait_for_label_url' => true,
-                'preferences' => [['type' => 'PRINT', 'format' => 'PDF', 'groups' => [['group' => 'AU' === strtoupper($s->recipient->country) ? 'Parcel Post' : 'International', 'layout' => $s->option('layout', 'A4-1pp'), 'branded' => false, 'left_offset' => 0, 'top_offset' => 0]]]],
-                'shipments' => [['shipment_id' => $id]],
-            ]);
-            $url = $labels['labels'][0]['url'] ?? null;
-            if (\is_string($url) && 'AVAILABLE' === ($labels['labels'][0]['status'] ?? 'AVAILABLE')) {
-                $content = $this->api->call('GET', $url)['content'] ?? null;
-            }
+            [$url, $content] = GetSlipAction::label($this->api, $id, (string) $s->option('label_group', Mapping::labelGroup($product, $s->recipient->country)), (string) $s->option('layout', 'A4-1pp'));
         } catch (CarrierException) {
-            // Pending: GetSlip asks again.
+            // The shipment is created; slip() asks for its label again.
         }
-        $request->setResult(new Label('auspost', $number, $content, Label::PDF, $url, 'https://auspost.com.au/mypost/track/#/details/'.rawurlencode($number)));
+        $request->setResult(new Label('auspost', $number, $content, Label::PDF, $url, self::trackingUrl($number)));
+    }
+
+    public static function trackingUrl(string $number): string
+    {
+        return 'https://auspost.com.au/mypost/track/#/details/'.rawurlencode($number);
     }
 }

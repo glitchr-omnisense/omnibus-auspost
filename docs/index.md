@@ -50,6 +50,7 @@ Shipment options (`Shipment::$options`):
 | `recipient_state` | rate, ship | - | the recipient's state |
 | `authority_to_leave` | ship | `false` | the parcel may be left without a signature |
 | `layout` | ship | `A4-1pp` | the label sheet: `A4-1pp`, `A4-4pp`, `THERMAL-LABEL-A6-1PP` (always a PDF) |
+| `label_group` | ship | by product | the label group: `Parcel Post`, `Express Post`, `International`... (for a contract product the table does not know) |
 | `description` | ship | `Merchandise` | the customs description, outside Australia |
 | `classification` | ship | `SOLD` | the customs classification type, outside Australia |
 
@@ -63,7 +64,7 @@ The address model has no state: it comes from the two options.
 | `Shipping` | yes |
 | `Tracking` | yes |
 | `Pickup` | no: parcel lockers and post offices are given as recipient addresses |
-| `GetSlip` | no |
+| `GetSlip` | yes: the label asked for again, through the tracking id's shipment |
 | `Cancel` | yes, before the shipment is lodged |
 | `Paperless` | no |
 
@@ -99,16 +100,13 @@ the recipient has an email, both parties, one item per parcel with the product
 customs contents (the `description`, quantity 1, the parcel's `value` or 1.00, its weight, the
 sender's country as origin) and the `classification`. The tracking number is the first item's
 `article_id` (else its `consignment_id`). Then `POST /labels`, waiting for the label's URL, PDF
-format, group `Parcel Post` in Australia and `International` elsewhere (whatever the product),
+format, the group `International` abroad, `Express Post` for an Express product (`EXP`, or one
+the table names so), `Parcel Post` otherwise, or the `label_group` option for a contract product,
 the `layout`, unbranded, no offsets; when the label is `AVAILABLE`, its URL is fetched into
 `content`. The label's `url` is kept either way. When the label request fails, the booking still
-succeeds without a label (a comment in `ShippingAction` says `GetSlip` asks again; `GetSlip` is
-not supported). The format is `application/pdf`; `trackingUrl` is
+succeeds without a label: `slip()` asks for it again. The format is `application/pdf`; `trackingUrl` is
 `https://auspost.com.au/mypost/track/#/details/<number>`. A response without a shipment id or a
 number is a `CarrierException` (`Australia Post booked no shipment.`).
-
-> [!WARNING]
-> Known defect: the label group is `Parcel Post` in Australia whatever the product (Express Post included), where it should follow the product.
 
 **Track.** `GET /track` for the number; the locale is not sent. The events of the first trackable
 item (else of the result): their date, description and location; no event code is kept. Events
@@ -125,6 +123,12 @@ description); each event's from its description, with these words tried in order
 | `created`, `sealed`, `pending` | `PENDING` |
 | `transit`, `received`, `processed`, `initiated` | `IN_TRANSIT` |
 | anything else | `UNKNOWN` |
+
+**Slip.** The shipment is found by the tracking number (`GET /shipments?tracking_ids=`; none: a
+`CarrierException`, `Australia Post knows no shipment for <number>.`), then `POST /labels` as when
+shipping, the group from the shipment's first item's product and its destination, layout
+`A4-1pp`: the label's `url`, and its `content` once `AVAILABLE` (no URL: `Australia Post gave no
+label for <number>.`).
 
 **Cancel.** The shipment is found by the tracking number (`GET /shipments?tracking_ids=`); none
 found gives `false`. Then `DELETE /shipments?shipment_ids=<id>`: `true` when it does not fail.
@@ -200,8 +204,8 @@ Every failure is an `Omnibus\Exception\CarrierException` whose `carrier` is `aus
 - `Australia Post booked no shipment.` when no shipment id or number comes back.
 
 A failed label request after the shipment is created is not raised (above). A missing `api_key`,
-`password` or `account_number` is an `InvalidConfigException` when the gateway is built; `Pickup`,
-`GetSlip` and `Paperless` raise `RequestNotSupportedException` before any call.
+`password` or `account_number` is an `InvalidConfigException` when the gateway is built; `Pickup` and
+`Paperless` raise `RequestNotSupportedException` before any call.
 
 ## Verified, and not
 
@@ -215,8 +219,7 @@ those recorded answers.
 
 Not verified: the README says the package is built from Australia Post's published API
 documentation and was not yet run against the test environment; that needs the credentials above.
-Unchecked: whether the label group should follow the product (an Express Post label is asked for
-in the `Parcel Post` group), and rating several parcels, of which only the first is priced.
+Unchecked against a real account: the label groups by product.
 
 ## Responsibility
 

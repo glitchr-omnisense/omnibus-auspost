@@ -105,4 +105,29 @@ final class AuspostGatewayTest extends TestCase
         self::assertSame(['PP'], array_map(fn ($r) => $r->service, $rates), 'EXP does not carry the second parcel');
         self::assertSame(2835, $rates[0]->amount);
     }
+
+    /** Create Labels (POST /shipping/v1/labels): the preferences' group names the product family, Parcel Post, Express Post or International. */
+    public function testTheLabelGroupFollowsTheProduct(): void
+    {
+        $s = self::shipment();
+        $this->gateway()->ship(new Shipment($s->sender, $s->recipient, $s->parcels, 'EXP', reference: 'ORDER-1042', options: $s->options));
+        self::assertSame('Express Post', $this->calls[1][2]['preferences'][0]['groups'][0]['group']);
+        $this->calls = [];
+        $this->gateway()->ship($s);
+        self::assertSame('Parcel Post', $this->calls[1][2]['preferences'][0]['groups'][0]['group']);
+        $this->calls = [];
+        $this->gateway()->ship(new Shipment($s->sender, $s->recipient, $s->parcels, '3J85', reference: 'ORDER-1042', options: $s->options + ['label_group' => 'Express Post']));
+        self::assertSame('Express Post', $this->calls[1][2]['preferences'][0]['groups'][0]['group'], 'a contract product: the label_group option');
+    }
+
+    /** A label not ready at booking: slip() finds the shipment by its tracking id (GET /shipping/v1/shipments) and asks POST /shipping/v1/labels again. */
+    public function testALabelIsAskedForAgain(): void
+    {
+        $label = $this->gateway()->slip('ABC000128B03');
+        self::assertSame('ABC000128B03', $label->trackingNumber);
+        self::assertSame('%PDF-1.4 ap', $label->content);
+        self::assertStringEndsWith('/labels/r1.pdf', (string) $label->url);
+        self::assertStringContainsString('tracking_ids=ABC000128B03', $this->calls[0][4]);
+        self::assertSame('yAEpzyoPQmGvGdDEzLsVng', $this->calls[1][2]['shipments'][0]['shipment_id']);
+    }
 }

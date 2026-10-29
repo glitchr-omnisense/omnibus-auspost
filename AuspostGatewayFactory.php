@@ -3,6 +3,7 @@
 namespace Omnibus\Auspost;
 
 use Omnibus\Auspost\Action\CancelAction;
+use Omnibus\Auspost\Action\GetSlipAction;
 use Omnibus\Auspost\Action\RatingAction;
 use Omnibus\Auspost\Action\ShippingAction;
 use Omnibus\Auspost\Action\TrackingAction;
@@ -38,6 +39,7 @@ final class AuspostGatewayFactory extends GatewayFactory
             'omnibus.action.shipping' => new ShippingAction(),
             'omnibus.action.tracking' => new TrackingAction(),
             'omnibus.action.cancel' => new CancelAction(),
+            'omnibus.action.get_slip' => new GetSlipAction(),
         ]);
     }
 }

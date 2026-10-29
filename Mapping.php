@@ -10,6 +10,19 @@ use Omnibus\Model\TrackingStatus;
 /** Australia Post's shapes for ours. */
 final class Mapping
 {
+    /**
+     * The label group of POST /labels for a product: International abroad, Express Post for an
+     * Express product (EXP, or a contract product named so), Parcel Post otherwise.
+     */
+    public static function labelGroup(string $product, string $country): string
+    {
+        return match (true) {
+            'AU' !== strtoupper($country) => 'International',
+            str_starts_with(strtoupper($product), 'EXP') || str_contains(self::PRODUCTS[$product] ?? '', 'Express') => 'Express Post',
+            default => 'Parcel Post',
+        };
+    }
+
     public const PRODUCTS = ['PP' => 'Parcel Post', 'EXP' => 'Express Post', 'PTI8' => 'International Standard', 'ECM8' => 'International Express', 'AIR8' => 'International Economy Air'];
 
     public static function party(Address $a, ?string $state = null): array
