@@ -3,6 +3,7 @@
 namespace Omnibus\Auspost;
 
 use Omnibus\Exception\CarrierException;
+use Omnibus\Http\Redaction;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface as HttpExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -42,20 +43,32 @@ final class Api
             $content = $response->getContent(false);
             $type = $response->getHeaders(false)['content-type'][0] ?? '';
         } catch (HttpExceptionInterface|\JsonException $e) {
-            throw new CarrierException('auspost', 'Australia Post request failed: '.$e->getMessage(), null, $e);
+            $secrets = $this->secrets();
+
+            throw Redaction::withoutArguments(new CarrierException('auspost', 'Australia Post request failed: '.Redaction::text($e->getMessage(), $secrets), null, Redaction::copy($e, $secrets)));
         }
         if ($status < 400 && (str_contains($type, 'pdf') || str_contains($type, 'octet-stream'))) {
             return ['content' => $content];
         }
         $data = '' === $content ? [] : json_decode($content, true);
         if (!\is_array($data)) {
-            throw new CarrierException('auspost', sprintf('Australia Post answered HTTP %d with a body that is not JSON.', $status));
+            throw Redaction::withoutArguments(new CarrierException('auspost', sprintf('Australia Post answered HTTP %d with a body that is not JSON.', $status)));
         }
         if ($status >= 400 || isset($data['errors'])) {
             $error = $data['errors'][0] ?? [];
-            throw new CarrierException('auspost', (string) ($error['message'] ?? $error['error_message'] ?? sprintf('HTTP %d', $status)), isset($error['code']) ? (string) $error['code'] : (isset($error['error_code']) ? (string) $error['error_code'] : null));
+            throw Redaction::withoutArguments(new CarrierException('auspost', (string) ($error['message'] ?? $error['error_message'] ?? sprintf('HTTP %d', $status)), isset($error['code']) ? (string) $error['code'] : (isset($error['error_code']) ? (string) $error['error_code'] : null)));
         }
 
         return $data;
+    }
+
+    /**
+     * What a failure must not carry: the credentials, and what a request made of them.
+     *
+     * @return list<string>
+     */
+    private function secrets(string ...$more): array
+    {
+        return [$this->apiKey, $this->password, ...$more];
     }
 }
