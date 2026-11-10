@@ -1,0 +1,48 @@
+{
+    "$schema": "https://github.com/glitchr-omnisense/contracts/blob/1.x/resources/usage-policy.schema.json",
+    "provider": "auspost",
+    "rateLimits": [
+        {
+            "max": 10,
+            "window": "minute",
+            "scope": "key",
+            "operations": [
+                "track"
+            ],
+            "note": "Track Items: \"rate limited at 10 requests per minute\", up to 10 tracking ids a request. The page does not say per what: per key assumed."
+        }
+    ],
+    "concurrency": null,
+    "rights": {
+        "commercial": "contract",
+        "openSourceRequired": false,
+        "caching": {
+            "permission": "unknown",
+            "maxTtl": null
+        },
+        "storage": "forbidden",
+        "redistribution": "forbidden",
+        "attribution": {
+            "required": false,
+            "text": null,
+            "url": null,
+            "where": []
+        },
+        "licence": null
+    },
+    "requirements": {
+        "key": true,
+        "userAgent": {
+            "required": false,
+            "pattern": null
+        }
+    },
+    "provenance": {
+        "terms": "https://auspost.com.au/terms-conditions/api-licence-terms-and-conditions",
+        "policy": "https://developers.auspost.com.au/content/apis/shipping-and-tracking/info/api-resources/tracking.html",
+        "verifiedAt": "2026-11-10",
+        "declaredBy": "maintainer",
+        "contact": "https://developers.auspost.com.au/content/apis/registration/shipping-tracking.html",
+        "notes": "API Licence Terms of Use (July 2025): use only to facilitate Australia Post services (3.1(e)); eCommerce partners integrating for other customers apply for approval (3.1(f)); the information received may not be reproduced, republished or modified (5.1, 5.2); you answer for those you give credentials to. Shipping & Tracking is for eParcel and StarTrack contract customers. No limit published for shipments. No idempotency key: a shipment can be deleted until it is in an order; it is sent once."
+    }
+}

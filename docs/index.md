@@ -193,6 +193,10 @@ omnibus:
                 sandbox: '%env(bool:AUSPOST_SANDBOX)%'
 ```
 
+## Usage policy
+
+`policy.json` (named in `composer.json`'s `extra.omnisense.policy`) declares tracking's 10 requests a minute, read 2026-11-10 on Australia Post's tracking page; shipments publish no limit. The API Licence Terms forbid reproducing or republishing what the API answers. No idempotency key: a shipment is sent once. A 429 is a `RateLimitedException`, never retried, and the carrier's next calls wait for its `Retry-After`, unsent. See omnisense/omnibus' [Usage policies and rate limits](https://github.com/glitchr-omnisense/omnibus/blob/2.x/docs/policies.md).
+
 ## Errors
 
 Every failure is an `Omnibus\Exception\CarrierException` whose `carrier` is `auspost`:

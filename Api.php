@@ -4,6 +4,8 @@ namespace Omnibus\Auspost;
 
 use Omnibus\Exception\CarrierException;
 use Omnibus\Http\Redaction;
+use Omnibus\Http\Throttle;
+use Omnisense\Contracts\Policy\Backoff;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface as HttpExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -20,6 +22,8 @@ final class Api
         public readonly string $accountNumber,
         public readonly bool $sandbox = false,
         private readonly int $timeout = 20,
+        /** The waits the carrier asks for (omnisense/contracts' Backoff): no call while one lasts, a 429 a RateLimitedException, never retried */
+        private readonly ?Backoff $backoff = null,
     ) {
     }
 
@@ -32,6 +36,7 @@ final class Api
     public function call(string $method, string $path, ?array $body = null, array $query = []): array
     {
         try {
+            Throttle::before($this->backoff);
             $response = $this->http->request($method, str_starts_with($path, 'http') ? $path : $this->base().$path, [
                 'auth_basic' => [$this->apiKey, $this->password],
                 'headers' => ['Account-Number' => $this->accountNumber, 'Content-Type' => 'application/json', 'Accept' => 'application/json, application/pdf'],
@@ -40,6 +45,7 @@ final class Api
                 'timeout' => $this->timeout,
             ]);
             $status = $response->getStatusCode();
+            Throttle::after($this->backoff, 'auspost', $status, $response->getHeaders(false));
             $content = $response->getContent(false);
             $type = $response->getHeaders(false)['content-type'][0] ?? '';
         } catch (HttpExceptionInterface|\JsonException $e) {
