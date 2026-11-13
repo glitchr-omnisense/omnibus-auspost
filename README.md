@@ -4,6 +4,42 @@ Australia Post for [omnisense/omnibus](https://github.com/glitchr-omnisense/omni
 shipments with their labels, tracking and cancellations - the Shipping and Tracking API
 (basic auth with the API key, the charge account in a header).
 
+## Install and a first call
+
+```sh
+composer require omnibus/auspost
+```
+
+No account for this first call: Australia Post's answer is recorded
+(`Omnibus\Testing\RecordedHttpClient` answers in place of the API), so nothing leaves the process.
+With your own credentials, give the factory your HTTP client (or none: it makes its own) and drop
+the recorded one.
+
+```php
+<?php
+
+require __DIR__.'/vendor/autoload.php';
+
+use Omnibus\Auspost\AuspostGatewayFactory;
+use Omnibus\Testing\RecordedHttpClient;
+
+// Australia Post's answer, recorded: no account, and nothing leaves the process.
+$http = new RecordedHttpClient([
+    '/track' => ['tracking_results' => [['tracking_id' => 'ABC000128B03', 'status' => 'Delivered', 'trackable_items' => [['events' => [
+        ['location' => 'SYDNEY NSW', 'description' => 'Delivered', 'date' => '2026-10-02T10:15:00+10:00'],
+    ]]]]]],
+]);
+$gateway = (new AuspostGatewayFactory($http))->create(['api_key' => 'key', 'password' => 'pass', 'account_number' => '0000000000', 'sandbox' => true]);
+
+$tracking = $gateway->track('ABC000128B03');
+echo $tracking->status->value, ' - ', $tracking->latest()?->description, "\n";   // delivered - Delivered
+```
+
+A real call needs a Australia Post account (the credentials below). The answer is shaped after
+Australia Post's published documentation; the package has not been run against its service yet.
+
+## Configuration
+
 ```php
 $gateway = (new AuspostGatewayFactory($http))->create($options);   // $http: the application's HTTP client - none given, the factory makes its own; the options below
 ```
